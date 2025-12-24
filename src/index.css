@@ -47,6 +47,15 @@ All colors MUST be HSL.
     --glass-bg: hsla(0 0% 100% / 0.8);
     --glass-border: hsla(215 20% 80% / 0.2);
     --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Emotion colors */
+    --emotion-happy: 142 76% 36%;
+    --emotion-neutral: 217 91% 60%;
+    --emotion-sad: 48 96% 53%;
+    --emotion-angry: 25 95% 53%;
+    --emotion-fear: 0 84% 60%;
+    --emotion-surprise: 271 91% 65%;
+    --emotion-disgust: 152 69% 31%;
 
     --sidebar-background: 0 0% 98%;
 
@@ -100,6 +109,15 @@ All colors MUST be HSL.
     --shadow-hover: 0 16px 48px hsla(186 95% 48% / 0.3);
     --glass-bg: hsla(215 32% 10% / 0.35);
     --glass-border: hsla(0 0% 100% / 0.04);
+    
+    /* Emotion colors - same in dark mode */
+    --emotion-happy: 142 76% 36%;
+    --emotion-neutral: 217 91% 60%;
+    --emotion-sad: 48 96% 53%;
+    --emotion-angry: 25 95% 53%;
+    --emotion-fear: 0 84% 60%;
+    --emotion-surprise: 271 91% 65%;
+    --emotion-disgust: 152 69% 31%;
     
     color-scheme: dark;
     --sidebar-background: 240 5.9% 10%;
