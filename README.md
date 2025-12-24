@@ -59,6 +59,55 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Supabase (for backend and edge functions)
+
+## Fear Alert Feature
+
+This application includes an emergency alert system that detects fear emotions and sends email notifications to guardians.
+
+### How it works:
+
+- When fear emotion is detected with **confidence ≥ 90%**, the system automatically sends an emergency email
+- Email alerts are throttled to **once per 60 seconds** to prevent spam
+- Emergency emails are sent with the subject: "🚨 EMERGENCY ALERT: Fear Detected"
+
+### Environment Variables Setup
+
+1. **Frontend (.env file):**
+   - `VITE_GUARDIAN_EMAIL`: Email address of the guardian who will receive emergency alerts
+   - `VITE_SUPABASE_URL`: Your Supabase project URL
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`: Your Supabase anon/public key
+
+2. **Supabase Edge Function (set in Supabase Dashboard):**
+   - Choose ONE email service option:
+     
+     **Option 1: Resend (Recommended)**
+     - `RESEND_API_KEY`: Your Resend API key
+     - `SMTP_FROM`: Sender email address (e.g., onboarding@resend.dev)
+     
+     **Option 2: SendGrid**
+     - `SENDGRID_API_KEY`: Your SendGrid API key
+     - `SMTP_FROM`: Sender email address
+     
+     **Option 3: Direct SMTP**
+     - `SMTP_HOST`: SMTP server hostname
+     - `SMTP_PORT`: SMTP server port (usually 587)
+     - `SMTP_USER`: SMTP username
+     - `SMTP_PASSWORD`: SMTP password
+     - `SMTP_FROM`: Sender email address
+
+   - `GEMINI_API_KEY`: Google Gemini API key for emotion analysis (used by analyze-emotion function)
+
+### Setting up Supabase Edge Function Environment Variables:
+
+1. Go to your Supabase Dashboard
+2. Navigate to Project Settings > Edge Functions
+3. Add the environment variables for the `send-emergency-email` function
+
+### Getting Email Service API Keys:
+
+- **Resend**: Sign up at [resend.com](https://resend.com) and get your API key
+- **SendGrid**: Sign up at [sendgrid.com](https://sendgrid.com) and create an API key
 
 ## How can I deploy this project?
 

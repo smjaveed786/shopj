@@ -17,95 +17,146 @@ serve(async (req) => {
       throw new Error('No image data provided');
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: `You are a facial emotion analysis AI. Analyze the provided image and extract:
-1. Estimated age (number)
-2. Primary emotion (one of: happy, neutral, sad, angry, fear, surprise, disgust)
-3. Confidence level (0-100)
-4. Whether the person is smiling (true/false)
-5. Whether there's an emergency situation detected (true/false) - emergencies include signs of distress, medical emergency, or dangerous situations
+    const prompt = `Analyze the facial expression in this image and return ONLY a valid JSON object with these exact fields:
 
-Respond ONLY with valid JSON in this exact format, nothing else:
-{"age": 25, "emotion": "happy", "confidence": 85, "isSmiling": true, "isEmergency": false}
+{
+  "age": <estimated age as number or null>,
+  "emotion": "<one of: happy, neutral, sad, angry, fear, surprise, disgust>",
+  "confidence": <confidence level 0-100>,
+  "isSmiling": <true or false>,
+  "isEmergency": <true or false>,
+  "noFace": <true if no face detected, false otherwise>
+}
 
-If no face is detected, respond with:
-{"age": null, "emotion": "neutral", "confidence": 0, "isSmiling": false, "isEmergency": false, "noFace": true}`
+Important: 
+- Return ONLY the JSON object, no other text
+- The emotion should be the most prominent emotion visible
+- Confidence should reflect how certain you are about the emotion (0-100)
+- If the person appears happy or smiling, set emotion to "happy" and isSmiling to true
+- Only set noFace to true if no human face is visible in the image
+
+Example response:
+{"age": 30, "emotion": "happy", "confidence": 90, "isSmiling": true, "isEmergency": false, "noFace": false}`;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+                {
+                  inline_data: {
+                    mime_type: "image/jpeg",
+                    data: imageBase64,
+                  },
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            maxOutputTokens: 150,
+            temperature: 0.4,
           },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Analyze this face and provide the emotion data."
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:image/jpeg;base64,${imageBase64}`
-                }
-              }
-            ]
-          }
-        ],
-        max_tokens: 150,
-      }),
-    });
+        }),
+      }
+    );
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Gemini API error:", response.status, errorText);
+      
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again later." }), {
           status: 429,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required, please add funds." }), {
-          status: 402,
+      if (response.status === 401 || response.status === 403) {
+        return new Response(JSON.stringify({ 
+          error: "Invalid or missing Gemini API key. Please check GEMINI_API_KEY in Supabase Edge Function secrets.",
+          details: errorText 
+        }), {
+          status: 400, // Return 400 instead of 401 to avoid confusion with Supabase auth
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
+    
+    // Log the response for debugging (remove in production if needed)
+    console.log("Gemini API response:", JSON.stringify(data, null, 2));
+    
+    if (data.error) {
+      console.error("Gemini API error:", data.error);
+      throw new Error(`Gemini API error: ${data.error.message || JSON.stringify(data.error)}`);
+    }
+    
+    // Handle Gemini API response format
+    const candidates = data.candidates || [];
+    if (candidates.length === 0) {
+      console.error("No candidates in Gemini response");
+      throw new Error("No response from Gemini API");
+    }
+    
+    const candidate = candidates[0];
+    const content = candidate.content?.parts?.[0]?.text || "";
+    
+    if (!content) {
+      console.error("Empty content in Gemini response", candidate);
+      throw new Error("Empty response from Gemini API");
+    }
+    
+    console.log("Gemini response content:", content);
     
     // Parse the JSON response from the AI
     let analysisResult;
     try {
-      // Extract JSON from the response (in case there's extra text)
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysisResult = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error("No JSON found in response");
+      // Try to parse as JSON directly first
+      try {
+        analysisResult = JSON.parse(content.trim());
+      } catch (directParseError) {
+        // If direct parse fails, try to extract JSON from text
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          analysisResult = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error("No JSON found in response");
+        }
       }
+      
+      // Validate the result has required fields
+      if (!analysisResult.emotion) {
+        throw new Error("Invalid response format: missing emotion");
+      }
+      
+      console.log("Parsed analysis result:", analysisResult);
     } catch (parseError) {
       console.error("Failed to parse AI response:", content);
+      console.error("Parse error:", parseError);
+      // Return default result with error indication
       analysisResult = {
         age: null,
         emotion: "neutral",
         confidence: 0,
         isSmiling: false,
         isEmergency: false,
-        noFace: true
+        noFace: true,
+        error: `Failed to parse response: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`
       };
     }
 
