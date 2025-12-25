@@ -12,7 +12,7 @@ serve(async (req) => {
 
   try {
     const { imageBase64 } = await req.json();
-    
+
     if (!imageBase64) {
       throw new Error('No image data provided');
     }
@@ -111,17 +111,17 @@ Example response:
 
     const data = await response.json();
     console.log("Lovable AI response:", JSON.stringify(data, null, 2));
-    
+
     // Extract the content from the response
     const content = data.choices?.[0]?.message?.content || "";
-    
+
     if (!content) {
       console.error("Empty content in AI response");
       throw new Error("Empty response from AI");
     }
-    
+
     console.log("AI response content:", content);
-    
+
     // Parse the JSON response from the AI
     let analysisResult;
     try {
@@ -137,17 +137,17 @@ Example response:
           throw new Error("No JSON found in response");
         }
       }
-      
+
       // Validate the result has required fields
       if (!analysisResult.emotion) {
         throw new Error("Invalid response format: missing emotion");
       }
-      
+
       // Ensure isEmergency is set correctly for fear
       if (analysisResult.emotion === 'fear' && analysisResult.confidence >= 90) {
         analysisResult.isEmergency = true;
       }
-      
+
       console.log("Parsed analysis result:", analysisResult);
     } catch (parseError) {
       console.error("Failed to parse AI response:", content);

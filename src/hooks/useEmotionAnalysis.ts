@@ -33,7 +33,7 @@ export function useEmotionAnalysis() {
     if (inFlightRef.current) return;
 
     // Throttle to reduce AI rate-limits
-    if (!skipThrottle && now - lastAnalysisRef.current < 10000) return; // max once per 10s
+    if (!skipThrottle && now - lastAnalysisRef.current < 2000) return; // max once per 2s
     lastAnalysisRef.current = now;
 
     inFlightRef.current = true;

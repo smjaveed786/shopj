@@ -1,13 +1,17 @@
 import { useEffect, useCallback } from 'react';
 import { useWebcam } from '@/hooks/useWebcam';
 import { useEmotionAnalysis } from '@/hooks/useEmotionAnalysis';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { CameraFeed } from './CameraFeed';
 import { InfoCard } from './InfoCard';
 import { EmotionIndicator } from './EmotionIndicator';
 import { SystemStatus } from './SystemStatus';
 import { ImageUpload } from './ImageUpload';
+import { SpotifyPlayer } from './SpotifyPlayer';
+import { Language } from '@/data/spotifyData';
 import { EMOTION_LABELS } from '@/types/emotion';
 import { User, Smile, Brain, Sparkles } from 'lucide-react';
+import { useState } from 'react';
 
 export function EmotionDashboard() {
   const {
@@ -28,6 +32,20 @@ export function EmotionDashboard() {
     resetData,
   } = useEmotionAnalysis();
 
+  const { speak } = useTextToSpeech();
+  const [musicLanguage, setMusicLanguage] = useState<Language>('english');
+
+  // Speak emotion when it changes or updates
+  useEffect(() => {
+    if (emotionData.noFace) return;
+
+    if (emotionData.isSmiling) {
+      speak('Smiling');
+    } else {
+      speak(EMOTION_LABELS[emotionData.emotion]);
+    }
+  }, [emotionData, speak]);
+
   // Capture and analyze frames periodically
   useEffect(() => {
     if (!isStreaming) {
@@ -40,7 +58,7 @@ export function EmotionDashboard() {
       if (frame) {
         analyzeFrame(frame);
       }
-    }, 5000); // Analyze every 5 seconds to avoid rate limits
+    }, 2000); // Analyze every 2 seconds
 
     return () => clearInterval(interval);
   }, [isStreaming, captureFrame, analyzeFrame, resetData]);
@@ -123,6 +141,12 @@ export function EmotionDashboard() {
               onImageSelect={(base64) => analyzeFrame(base64, true)}
               onClear={resetData}
               isAnalyzing={isAnalyzing}
+            />
+            <SpotifyPlayer
+              emotion={emotionData.emotion}
+              language={musicLanguage}
+              onLanguageChange={setMusicLanguage}
+              isVisible={true}
             />
           </div>
         </div>
