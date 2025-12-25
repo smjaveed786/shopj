@@ -20,9 +20,9 @@ export function useEmotionAnalysis() {
   const { checkAndAlertFear } = useFearAlert();
 
   const analyzeFrame = useCallback(async (imageBase64: string) => {
-    // Throttle to max once per 2 seconds
+    // Throttle to max once per 4 seconds to avoid rate limits
     const now = Date.now();
-    if (now - lastAnalysisRef.current < 2000) {
+    if (now - lastAnalysisRef.current < 4000) {
       return;
     }
     lastAnalysisRef.current = now;
