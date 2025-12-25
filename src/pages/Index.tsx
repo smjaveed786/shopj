@@ -54,7 +54,7 @@ export default function Index() {
     <div className="min-h-screen relative overflow-hidden">
       {/* Gradient Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 -z-10" />
-      
+
       {/* Animated gradient overlay */}
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent -z-10" />
 
@@ -126,13 +126,22 @@ export default function Index() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
+          className="mt-10 flex flex-wrap gap-4 justify-center"
         >
           <Button
             size="lg"
             onClick={() => navigate('/dashboard')}
-            className="mt-10 px-8 py-6 text-lg font-semibold bg-white text-purple-600 hover:bg-white/90 shadow-2xl hover:shadow-white/25 transition-all duration-300"
+            className="px-8 py-6 text-lg font-semibold bg-white text-purple-600 hover:bg-white/90 shadow-2xl hover:shadow-white/25 transition-all duration-300"
           >
             Start Detection
+          </Button>
+
+          <Button
+            size="lg"
+            onClick={() => navigate('/analytics')}
+            className="px-8 py-6 text-lg font-semibold bg-white/10 text-white hover:bg-white/20 backdrop-blur-md border border-white/20 shadow-2xl transition-all duration-300"
+          >
+            Analytics
           </Button>
         </motion.div>
 
