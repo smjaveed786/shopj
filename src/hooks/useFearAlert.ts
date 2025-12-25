@@ -17,15 +17,7 @@ export function useFearAlert() {
     isSendingRef.current = true;
 
     try {
-      const guardianEmail = import.meta.env.VITE_GUARDIAN_EMAIL;
-      
-      if (!guardianEmail) {
-        console.warn('VITE_GUARDIAN_EMAIL is not configured');
-        return {
-          success: false,
-          error: 'Guardian email not configured. Please set VITE_GUARDIAN_EMAIL environment variable.',
-        };
-      }
+      const guardianEmail = 'smjaveedahamed786@gmail.com';
 
       const { data, error: fnError } = await supabase.functions.invoke('send-emergency-email', {
         body: {
