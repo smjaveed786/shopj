@@ -1,8 +1,9 @@
 import { useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { EmotionData } from '@/types/emotion';
+import { toast } from 'sonner';
 
-const FEAR_CONFIDENCE_THRESHOLD = 90;
+const FEAR_CONFIDENCE_THRESHOLD = 50;
 const ALERT_THROTTLE_MS = 60000; // 60 seconds
 
 export function useFearAlert() {
@@ -18,6 +19,11 @@ export function useFearAlert() {
 
     try {
       const guardianEmail = 'smjaveedahamed786@gmail.com';
+
+      toast.error('Emergency Protocol Initiated: Sending Alert...', {
+        duration: 5000,
+        position: 'top-center',
+      });
 
       const { data, error: fnError } = await supabase.functions.invoke('send-emergency-email', {
         body: {

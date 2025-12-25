@@ -133,6 +133,12 @@ export function EmotionDashboard() {
               currentEmotion={emotionData.emotion}
               confidence={emotionData.confidence}
             />
+            {isAnalyzing && (
+              <div className="flex items-center justify-center gap-2 text-primary animate-pulse pb-2">
+                <div className="w-2 h-2 rounded-full bg-primary" />
+                <span className="text-sm">Analyzing...</span>
+              </div>
+            )}
             <SystemStatus
               isEmergency={emotionData.isEmergency}
               isStreaming={isStreaming}

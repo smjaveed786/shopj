@@ -10,7 +10,7 @@ interface SystemStatusProps {
 
 export function SystemStatus({ isEmergency, isStreaming }: SystemStatusProps) {
   const status = !isStreaming ? 'offline' : isEmergency ? 'emergency' : 'normal';
-  
+
   return (
     <Card className={cn(
       'glass-card shadow-card transition-all duration-300',
@@ -38,13 +38,13 @@ export function SystemStatus({ isEmergency, isStreaming }: SystemStatusProps) {
             {status === 'normal' ? 'Normal' : status === 'emergency' ? 'Emergency' : 'Offline'}
           </span>
         </div>
-        
+
         {status === 'emergency' && (
           <p className="text-sm text-destructive text-center mt-3">
             Emergency situation detected. Please check the camera feed.
           </p>
         )}
-        
+
         {status === 'offline' && (
           <p className="text-sm text-muted-foreground text-center mt-3">
             Start the camera to begin monitoring.

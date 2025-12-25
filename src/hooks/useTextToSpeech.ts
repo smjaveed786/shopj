@@ -40,7 +40,13 @@ export function useTextToSpeech() {
             isSpeakingRef.current = false;
         };
 
-        synth.speak(utterance);
+        try {
+            synth.speak(utterance);
+        } catch (e) {
+            // Ignore auto-play errors or other speech synthesis issues
+            console.warn('Speech synthesis blocked or failed', e);
+            isSpeakingRef.current = false;
+        }
     }, [synth]);
 
     return { speak };
